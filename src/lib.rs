@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    ops::{Add, AddAssign, Div, Mul, Sub},
+    ops::{Add, AddAssign, Div, Mul, MulAssign, Sub},
 };
 
 use derive_more::Display;
@@ -59,7 +59,7 @@ impl Mul<UnipolarFloat> for UnipolarFloat {
 impl MulAssign<UnipolarFloat> for UnipolarFloat {
     fn mul_assign(&mut self, rhs: UnipolarFloat) {
         // This cannot go out of range so no need to clamp.
-        *self.0 *= rhs.val();
+        self.0 *= rhs.val();
     }
 }
 
