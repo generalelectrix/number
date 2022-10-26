@@ -150,6 +150,21 @@ impl Mul<BipolarFloat> for BipolarFloat {
     }
 }
 
+impl Sub<BipolarFloat> for BipolarFloat {
+    type Output = BipolarFloat;
+    fn sub(self, rhs: BipolarFloat) -> Self::Output {
+        Self::new(self.0 - rhs.0)
+    }
+}
+
+impl Add<BipolarFloat> for BipolarFloat {
+    type Output = BipolarFloat;
+    /// Add other to self and clamp.
+    fn add(self, rhs: BipolarFloat) -> Self::Output {
+        Self::new(self.val() + rhs.val())
+    }
+}
+
 impl AddAssign<BipolarFloat> for BipolarFloat {
     /// Add other to self and clamp.
     fn add_assign(&mut self, rhs: BipolarFloat) {
