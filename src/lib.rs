@@ -99,6 +99,7 @@ pub struct BipolarFloat(f64);
 
 impl BipolarFloat {
     pub const ZERO: Self = Self(0.0);
+    pub const ONE: Self = Self(1.0);
 
     pub fn new(v: f64) -> Self {
         let mut bf = Self(v);
@@ -146,6 +147,20 @@ impl Mul<BipolarFloat> for BipolarFloat {
     fn mul(self, rhs: BipolarFloat) -> Self::Output {
         // This cannot go out of range so no need to clamp.
         Self(self.0 * rhs.0)
+    }
+}
+
+impl AddAssign<BipolarFloat> for BipolarFloat {
+    /// Add other to self and clamp.
+    fn add_assign(&mut self, rhs: BipolarFloat) {
+        *self += rhs.val();
+    }
+}
+
+impl AddAssign<f64> for BipolarFloat {
+    // Add other to self and clamp.
+    fn add_assign(&mut self, rhs: f64) {
+        *self = Self::new(self.0 + rhs);
     }
 }
 
