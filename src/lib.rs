@@ -111,6 +111,10 @@ impl BipolarFloat {
         self.0
     }
 
+    pub fn abs(&self) -> UnipolarFloat {
+        UnipolarFloat(self.0.abs())
+    }
+
     fn clamp(&mut self) {
         clamp(&mut self.0, -1.0, 1.0);
     }
