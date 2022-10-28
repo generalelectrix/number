@@ -15,14 +15,21 @@ impl UnipolarFloat {
     pub const ZERO: Self = Self(0.0);
     pub const ONE: Self = Self(1.0);
 
+    /// Clamp the provided value to the unit range.
     pub fn new(v: f64) -> Self {
         let mut uf = Self(v);
         uf.clamp();
         uf
     }
 
+    /// Return the inner float value.
     pub fn val(&self) -> f64 {
         self.0
+    }
+
+    /// Return the negation of this value, mapping 1 to 0 and 0 to 1.
+    pub fn invert(&self) -> Self {
+        Self(1.0 - self.0)
     }
 
     fn clamp(&mut self) {
@@ -101,18 +108,26 @@ impl BipolarFloat {
     pub const ZERO: Self = Self(0.0);
     pub const ONE: Self = Self(1.0);
 
+    /// Clamp the provided value to the bipolar unit range.
     pub fn new(v: f64) -> Self {
         let mut bf = Self(v);
         bf.clamp();
         bf
     }
 
+    /// Return the inner float value.
     pub fn val(&self) -> f64 {
         self.0
     }
 
+    /// Return the absolute value as a UnipolarFloat.
     pub fn abs(&self) -> UnipolarFloat {
         UnipolarFloat(self.0.abs())
+    }
+
+    /// Return the negation of this value.
+    pub fn invert(&self) -> Self {
+        Self(-1.0 * self.0)
     }
 
     fn clamp(&mut self) {
