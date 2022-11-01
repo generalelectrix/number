@@ -231,12 +231,6 @@ impl Phase {
     }
 }
 
-impl Default for Phase {
-    fn default() -> Self {
-        Self(0.0)
-    }
-}
-
 impl Add<Phase> for Phase {
     type Output = Phase;
     /// Implement addition as add followed by wrap.
