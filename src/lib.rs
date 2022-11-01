@@ -130,6 +130,15 @@ impl BipolarFloat {
         Self(-1.0 * self.0)
     }
 
+    /// Conditionally return the negation of this value.
+    pub fn invert_if(&self, invert: bool) -> Self {
+        if invert {
+            self.invert()
+        } else {
+            *self
+        }
+    }
+
     fn clamp(&mut self) {
         clamp(&mut self.0, -1.0, 1.0);
     }
