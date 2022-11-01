@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 /// A float type constrained to the range [0.0, 1.0].
 /// The type upholds the range invariant by clamping the value to the range.
-#[derive(Display, Debug, Copy, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Display, Debug, Copy, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 pub struct UnipolarFloat(f64);
 
 impl UnipolarFloat {
@@ -101,7 +101,7 @@ impl AddAssign<f64> for UnipolarFloat {
 
 // A float type constrained to the range [-1.0, 1.0].
 /// The type upholds the range invariant by clamping the value to the range.
-#[derive(Display, Debug, Copy, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Display, Debug, Copy, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Default)]
 pub struct BipolarFloat(f64);
 
 impl BipolarFloat {
@@ -205,7 +205,7 @@ fn clamp(v: &mut f64, min: f64, max: f64) {
 /// Phase represents a unit angular phase (on the range [0.0, 1.0]).
 /// Phase upholds the invariant that the valye contained inside is always in
 /// range via wrapping the phase using euclidean modulus.
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, PartialOrd, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct Phase(f64);
 
 impl Phase {
