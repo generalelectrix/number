@@ -49,9 +49,9 @@ impl PartialOrd<f64> for UnipolarFloat {
     }
 }
 
-impl Into<f64> for UnipolarFloat {
-    fn into(self) -> f64 {
-        self.0
+impl From<UnipolarFloat> for f64 {
+    fn from(value: UnipolarFloat) -> Self {
+        value.0
     }
 }
 
@@ -156,9 +156,9 @@ impl PartialOrd<f64> for BipolarFloat {
     }
 }
 
-impl Into<f64> for BipolarFloat {
-    fn into(self) -> f64 {
-        self.0
+impl From<BipolarFloat> for f64 {
+    fn from(value: BipolarFloat) -> Self {
+        value.0
     }
 }
 
@@ -214,7 +214,7 @@ fn clamp(v: &mut f64, min: f64, max: f64) {
 /// Phase represents a unit angular phase (on the range [0.0, 1.0]).
 /// Phase upholds the invariant that the valye contained inside is always in
 /// range via wrapping the phase using euclidean modulus.
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, PartialOrd, Copy, Clone, Serialize, Deserialize, Default)]
 pub struct Phase(f64);
 
 impl Phase {
@@ -240,6 +240,12 @@ impl Phase {
     }
 }
 
+impl From<Phase> for f64 {
+    fn from(value: Phase) -> Self {
+        value.0
+    }
+}
+
 impl Add<Phase> for Phase {
     type Output = Phase;
     /// Implement addition as add followed by wrap.
@@ -253,6 +259,12 @@ impl Add<f64> for Phase {
     /// Implement addition as add followed by wrap.
     fn add(self, rhs: f64) -> Self::Output {
         Self::new(self.0 + rhs)
+    }
+}
+
+impl AddAssign<Phase> for Phase {
+    fn add_assign(&mut self, rhs: Phase) {
+        *self = *self + rhs;
     }
 }
 
