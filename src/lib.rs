@@ -55,39 +55,59 @@ impl From<UnipolarFloat> for f64 {
     }
 }
 
-impl Mul<UnipolarFloat> for UnipolarFloat {
-    type Output = UnipolarFloat;
-    fn mul(self, rhs: UnipolarFloat) -> Self::Output {
+impl Mul for UnipolarFloat {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
         // This cannot go out of range so no need to clamp.
         Self(self.0 * rhs.0)
     }
 }
 
-impl MulAssign<UnipolarFloat> for UnipolarFloat {
-    fn mul_assign(&mut self, rhs: UnipolarFloat) {
+impl Mul<f64> for UnipolarFloat {
+    type Output = f64;
+    fn mul(self, rhs: f64) -> Self::Output {
+        self.0 * rhs
+    }
+}
+
+impl Mul<UnipolarFloat> for f64 {
+    type Output = Self;
+    fn mul(self, rhs: UnipolarFloat) -> Self::Output {
+        self * rhs.0
+    }
+}
+
+impl MulAssign for UnipolarFloat {
+    fn mul_assign(&mut self, rhs: Self) {
         // This cannot go out of range so no need to clamp.
         self.0 *= rhs.val();
     }
 }
 
-impl Sub<UnipolarFloat> for UnipolarFloat {
-    type Output = UnipolarFloat;
-    fn sub(self, rhs: UnipolarFloat) -> Self::Output {
+impl MulAssign<UnipolarFloat> for f64 {
+    fn mul_assign(&mut self, rhs: UnipolarFloat) {
+        *self *= rhs.val();
+    }
+}
+
+impl Sub for UnipolarFloat {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
         Self::new(self.0 - rhs.0)
     }
 }
 
-impl Add<UnipolarFloat> for UnipolarFloat {
-    type Output = UnipolarFloat;
+impl Add for UnipolarFloat {
+    type Output = Self;
     /// Add other to self and clamp.
-    fn add(self, rhs: UnipolarFloat) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self::new(self.val() + rhs.val())
     }
 }
 
-impl AddAssign<UnipolarFloat> for UnipolarFloat {
+impl AddAssign for UnipolarFloat {
     /// Add other to self and clamp.
-    fn add_assign(&mut self, rhs: UnipolarFloat) {
+    fn add_assign(&mut self, rhs: Self) {
         *self += rhs.val();
     }
 }
@@ -163,39 +183,46 @@ impl From<BipolarFloat> for f64 {
 }
 
 impl Mul<UnipolarFloat> for BipolarFloat {
-    type Output = BipolarFloat;
+    type Output = Self;
     fn mul(self, rhs: UnipolarFloat) -> Self::Output {
         // This cannot go out of range so no need to clamp.
         Self(self.0 * rhs.0)
     }
 }
 
-impl Mul<BipolarFloat> for BipolarFloat {
-    type Output = BipolarFloat;
-    fn mul(self, rhs: BipolarFloat) -> Self::Output {
+impl Mul for BipolarFloat {
+    type Output = Self;
+    fn mul(self, rhs: Self) -> Self::Output {
         // This cannot go out of range so no need to clamp.
         Self(self.0 * rhs.0)
     }
 }
 
-impl Sub<BipolarFloat> for BipolarFloat {
-    type Output = BipolarFloat;
-    fn sub(self, rhs: BipolarFloat) -> Self::Output {
+impl Mul<BipolarFloat> for f64 {
+    type Output = Self;
+    fn mul(self, rhs: BipolarFloat) -> Self::Output {
+        self * rhs.0
+    }
+}
+
+impl Sub for BipolarFloat {
+    type Output = Self;
+    fn sub(self, rhs: Self) -> Self::Output {
         Self::new(self.0 - rhs.0)
     }
 }
 
-impl Add<BipolarFloat> for BipolarFloat {
-    type Output = BipolarFloat;
+impl Add for BipolarFloat {
+    type Output = Self;
     /// Add other to self and clamp.
-    fn add(self, rhs: BipolarFloat) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self::new(self.val() + rhs.val())
     }
 }
 
-impl AddAssign<BipolarFloat> for BipolarFloat {
+impl AddAssign for BipolarFloat {
     /// Add other to self and clamp.
-    fn add_assign(&mut self, rhs: BipolarFloat) {
+    fn add_assign(&mut self, rhs: Self) {
         *self += rhs.val();
     }
 }
