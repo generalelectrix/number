@@ -32,6 +32,18 @@ impl UnipolarFloat {
         Self(1.0 - self.0)
     }
 
+    /// Return this value as a Phase.
+    pub fn as_phase(&self) -> Phase {
+        // Phase and Unipolar have the same domain, no need to check.
+        Phase(self.0)
+    }
+
+    /// Rescale this unipolar number into a bipolar number.
+    /// 0 -> -1.0, 0.5 -> 0, 1.0 -> 1.0
+    pub fn rescale_as_bipolar(&self) -> BipolarFloat {
+        BipolarFloat((self.0 * 2.0) - 1.0)
+    }
+
     fn clamp(&mut self) {
         clamp(&mut self.0, 0.0, 1.0);
     }
@@ -159,6 +171,12 @@ impl BipolarFloat {
         }
     }
 
+    /// Rescale this bipolar number into a unipolar number.
+    /// -1 -> 0, 0 -> 0.5, 1.0 -> 1.0
+    pub fn rescale_as_unipolar(&self) -> UnipolarFloat {
+        UnipolarFloat((self.0 + 1.0) / 2.0)
+    }
+
     fn clamp(&mut self) {
         clamp(&mut self.0, -1.0, 1.0);
     }
@@ -259,6 +277,12 @@ impl Phase {
 
     fn wrap(&mut self) {
         self.0 = self.0.rem_euclid(1.0);
+    }
+
+    /// Return this phase as a UnipolarFloat.
+    pub fn as_unipolar(&self) -> UnipolarFloat {
+        // Phase and Unipolar have the same domain, no need to check.
+        UnipolarFloat(self.0)
     }
 
     /// Return the inner phase.
