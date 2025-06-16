@@ -16,36 +16,30 @@ impl UnipolarFloat {
     pub const ONE: Self = Self(1.0);
 
     /// Clamp the provided value to the unit range.
-    pub fn new(v: f64) -> Self {
-        let mut uf = Self(v);
-        uf.clamp();
-        uf
+    pub const fn new(v: f64) -> Self {
+        Self(v.clamp(0.0, 1.0))
     }
 
     /// Return the inner float value.
-    pub fn val(&self) -> f64 {
+    pub const fn val(self) -> f64 {
         self.0
     }
 
     /// Return the negation of this value, mapping 1 to 0 and 0 to 1.
-    pub fn invert(&self) -> Self {
+    pub const fn invert(self) -> Self {
         Self(1.0 - self.0)
     }
 
     /// Return this value as a Phase.
-    pub fn as_phase(&self) -> Phase {
+    pub const fn as_phase(self) -> Phase {
         // Phase and Unipolar have the same domain, no need to check.
         Phase(self.0)
     }
 
     /// Rescale this unipolar number into a bipolar number.
     /// 0 -> -1.0, 0.5 -> 0, 1.0 -> 1.0
-    pub fn rescale_as_bipolar(&self) -> BipolarFloat {
+    pub const fn rescale_as_bipolar(self) -> BipolarFloat {
         BipolarFloat((self.0 * 2.0) - 1.0)
-    }
-
-    fn clamp(&mut self) {
-        clamp(&mut self.0, 0.0, 1.0);
     }
 }
 
@@ -141,44 +135,38 @@ impl BipolarFloat {
     pub const ONE: Self = Self(1.0);
 
     /// Clamp the provided value to the bipolar unit range.
-    pub fn new(v: f64) -> Self {
-        let mut bf = Self(v);
-        bf.clamp();
-        bf
+    pub const fn new(v: f64) -> Self {
+        Self(v.clamp(-1.0, 1.0))
     }
 
     /// Return the inner float value.
-    pub fn val(&self) -> f64 {
+    pub const fn val(self) -> f64 {
         self.0
     }
 
     /// Return the absolute value as a UnipolarFloat.
-    pub fn abs(&self) -> UnipolarFloat {
+    pub const fn abs(self) -> UnipolarFloat {
         UnipolarFloat(self.0.abs())
     }
 
     /// Return the negation of this value.
-    pub fn invert(&self) -> Self {
+    pub const fn invert(self) -> Self {
         Self(-1.0 * self.0)
     }
 
     /// Conditionally return the negation of this value.
-    pub fn invert_if(&self, invert: bool) -> Self {
+    pub const fn invert_if(self, invert: bool) -> Self {
         if invert {
             self.invert()
         } else {
-            *self
+            self
         }
     }
 
     /// Rescale this bipolar number into a unipolar number.
     /// -1 -> 0, 0 -> 0.5, 1.0 -> 1.0
-    pub fn rescale_as_unipolar(&self) -> UnipolarFloat {
+    pub const fn rescale_as_unipolar(self) -> UnipolarFloat {
         UnipolarFloat((self.0 + 1.0) / 2.0)
-    }
-
-    fn clamp(&mut self) {
-        clamp(&mut self.0, -1.0, 1.0);
     }
 }
 
@@ -250,10 +238,6 @@ impl AddAssign<f64> for BipolarFloat {
     fn add_assign(&mut self, rhs: f64) {
         *self = Self::new(self.0 + rhs);
     }
-}
-
-fn clamp(v: &mut f64, min: f64, max: f64) {
-    *v = f64::min(f64::max(*v, min), max)
 }
 
 /// Phase represents a unit angular phase (on the range [0.0, 1.0]).
