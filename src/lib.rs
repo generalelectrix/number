@@ -16,7 +16,13 @@ impl UnipolarFloat {
     pub const ONE: Self = Self(1.0);
 
     /// Clamp the provided value to the unit range.
+    ///
+    /// Reject NaN; set it to 0 instead.
     pub const fn new(v: f64) -> Self {
+        if v.is_nan() {
+            debug_assert!(false, "NaN passed to UnipolarFloat");
+            return Self::ZERO;
+        }
         Self(v.clamp(0.0, 1.0))
     }
 
@@ -135,7 +141,13 @@ impl BipolarFloat {
     pub const ONE: Self = Self(1.0);
 
     /// Clamp the provided value to the bipolar unit range.
+    ///
+    /// Reject NaN; set it to 0 instead.
     pub const fn new(v: f64) -> Self {
+        if v.is_nan() {
+            debug_assert!(false, "NaN passed to BipolarFloat");
+            return Self::ZERO;
+        }
         Self(v.clamp(-1.0, 1.0))
     }
 
@@ -151,7 +163,7 @@ impl BipolarFloat {
 
     /// Return the negation of this value.
     pub const fn invert(self) -> Self {
-        Self(-1.0 * self.0)
+        Self(-self.0)
     }
 
     /// Conditionally return the negation of this value.
@@ -253,7 +265,14 @@ impl Phase {
     /// an acceptable value for phase and is useful for certain circumstances.
     pub const ONE: Self = Self(1.0);
 
+    /// Wrap the provided value to [0, 1) to represent a phase.
+    ///
+    /// Reject NaN; set it to 0 instead.
     pub fn new(v: f64) -> Self {
+        if v.is_nan() {
+            debug_assert!(false, "NaN passed to Phase");
+            return Self::ZERO;
+        }
         let mut p = Self(v);
         p.wrap();
         p
