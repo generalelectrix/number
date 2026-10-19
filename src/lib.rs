@@ -278,8 +278,15 @@ impl Phase {
         p
     }
 
+    /// Bring the value into [0, 1) as its distance above the whole number at
+    /// or below it: the Euclidean remainder by one, with every zero positive.
+    ///
+    /// A negative value too close to zero for its distance below one to be
+    /// told apart from one becomes exactly 1.0.
     fn wrap(&mut self) {
-        self.0 = self.0.rem_euclid(1.0);
+        // Rounding down rather than toward zero is what lifts a negative
+        // value into range, so no correction follows the subtraction.
+        self.0 -= self.0.floor();
     }
 
     /// Return this phase as a UnipolarFloat.
@@ -369,5 +376,65 @@ impl<T: Into<f64> + Copy> PartialEq<T> for Phase {
     fn eq(&self, other: &T) -> bool {
         let o: f64 = (*other).into();
         self.0.eq(&o)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A phase is the distance above the whole number at or below the value
+    /// it was made from: the Euclidean remainder by one, with every zero
+    /// positive.
+    #[test]
+    fn a_phase_is_the_euclidean_remainder_by_one_with_positive_zeros() {
+        // xorshift64*, so the probes are the same on every run.
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        let mut next = move || {
+            state ^= state >> 12;
+            state ^= state << 25;
+            state ^= state >> 27;
+            state.wrapping_mul(0x2545_F491_4F6C_DD1D)
+        };
+        let mut probes = Vec::new();
+        for _ in 0..100_000 {
+            let unit = (next() >> 11) as f64 / (1u64 << 53) as f64;
+            probes.extend([unit, unit * 64.0, unit * 1e6, -unit * 1e6, -unit * 1e-12]);
+            // Any finite value at all; a phase is never made from anything else.
+            let any = f64::from_bits(next());
+            if any.is_finite() {
+                probes.push(any);
+            }
+        }
+        // Whole numbers and eighths, and the values either side of them.
+        for k in -64..=64 {
+            let (mut below, mut above) = (f64::from(k) / 8.0, f64::from(k) / 8.0);
+            for _ in 0..4 {
+                probes.extend([below, above]);
+                below = below.next_down();
+                above = above.next_up();
+            }
+        }
+
+        for v in probes {
+            let wrapped = Phase::new(v).val();
+            let remainder = v.rem_euclid(1.0);
+            if remainder == 0.0 {
+                assert!(
+                    wrapped == 0.0 && wrapped.is_sign_positive(),
+                    "{v:e} wrapped to {wrapped:e} rather than +0"
+                );
+            } else {
+                assert_eq!(
+                    wrapped.to_bits(),
+                    remainder.to_bits(),
+                    "{v:e} wrapped to {wrapped:e} rather than {remainder:e}"
+                );
+            }
+        }
+        assert!(Phase::new(-3.0).val().is_sign_positive());
+        // Too little below zero for its distance below one to be told apart
+        // from one.
+        assert_eq!(Phase::new(-1e-20).val(), 1.0);
     }
 }
