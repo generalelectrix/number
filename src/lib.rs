@@ -190,11 +190,7 @@ impl BipolarFloat {
     /// Conditionally return the negation of this value.
     #[inline]
     pub const fn invert_if(self, invert: bool) -> Self {
-        if invert {
-            self.invert()
-        } else {
-            self
-        }
+        if invert { self.invert() } else { self }
     }
 
     /// Rescale this bipolar number into a unipolar number.
