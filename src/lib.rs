@@ -409,9 +409,7 @@ impl Div<UnipolarFloat> for Phase {
     /// The result is wrapped to ensure it is in range.
     #[inline]
     fn div(self, v: UnipolarFloat) -> Self {
-        // A full duty cycle divides by exactly one, which changes nothing but
-        // costs a divide on the caller's chain. Wrapped all the same, so
-        // `Phase::ONE` still comes out as zero.
+        // Avoid paying a divide for the very common case of dividing by unity.
         if v.0 == 1.0 {
             return Self::new(self.0);
         }
