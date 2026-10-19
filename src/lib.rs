@@ -300,28 +300,40 @@ impl Phase {
 
     /// Wrap the provided value to [0, 1) to represent a phase.
     ///
-    /// Reject NaN; set it to 0 instead.
+    /// Reject a value that isn't finite (NaN or an infinity); set it to 0
+    /// instead.
     #[inline]
     pub fn new(v: f64) -> Self {
-        if v.is_nan() {
-            debug_assert!(false, "NaN passed to Phase");
-            return Self::ZERO;
+        let wrapped = Self::wrap(v);
+        // NaN wraps to NaN, and so does an infinity, whose distance above its
+        // floor is inf - inf: one check on the result catches both. A branch
+        // to a cold path, rather than a select, keeps it off the wrap's chain.
+        if wrapped.is_nan() {
+            return Self::rejected();
         }
-        let mut p = Self(v);
-        p.wrap();
-        p
+        Self(wrapped)
     }
 
-    /// Bring the value into [0, 1) as its distance above the whole number at
-    /// or below it: the Euclidean remainder by one, with every zero positive.
+    /// The value's distance above the whole number at or below it: the
+    /// Euclidean remainder by one, with every zero positive.
     ///
     /// A negative value too close to zero for its distance below one to be
-    /// told apart from one becomes exactly 1.0.
+    /// told apart from one comes out as exactly 1.0.
     #[inline]
-    fn wrap(&mut self) {
+    fn wrap(v: f64) -> f64 {
         // Rounding down rather than toward zero is what lifts a negative
         // value into range, so no correction follows the subtraction.
-        self.0 -= self.0.floor();
+        v - v.floor()
+    }
+
+    /// Zero, standing in for a value that has no phase.
+    ///
+    /// Takes nothing, so a caller has nothing to keep alive for it.
+    #[cold]
+    #[inline(never)]
+    fn rejected() -> Self {
+        debug_assert!(false, "a value that isn't finite passed to Phase");
+        Self::ZERO
     }
 
     /// Return this phase as a UnipolarFloat.
@@ -514,5 +526,36 @@ mod tests {
             }
         }
         assert_eq!((Phase::ONE / UnipolarFloat::ONE).val(), 0.0);
+    }
+
+    /// A value that isn't finite has no phase. It's refused loudly where
+    /// debug assertions are on, and stands in as zero where they're off.
+    #[test]
+    fn a_value_that_is_not_finite_is_refused() {
+        type Make = fn() -> Phase;
+        let makers: [(&str, Make); 5] = [
+            ("NaN", || Phase::new(f64::NAN)),
+            ("infinity", || Phase::new(f64::INFINITY)),
+            ("negative infinity", || Phase::new(f64::NEG_INFINITY)),
+            ("a phase over zero", || {
+                Phase::new(0.5) / UnipolarFloat::ZERO
+            }),
+            ("a phase over -0", || {
+                Phase::new(0.5) / UnipolarFloat::new(-0.0)
+            }),
+        ];
+        for (what, make) in makers {
+            let made = std::panic::catch_unwind(make);
+            if cfg!(debug_assertions) {
+                assert!(made.is_err(), "{what} was let through as {made:?}");
+            } else {
+                let made = made.map(|p| p.val().to_bits());
+                assert_eq!(
+                    made.ok(),
+                    Some(0.0f64.to_bits()),
+                    "{what} did not stand in as zero"
+                );
+            }
+        }
     }
 }
