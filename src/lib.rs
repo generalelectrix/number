@@ -401,6 +401,12 @@ impl Div<UnipolarFloat> for Phase {
     /// The result is wrapped to ensure it is in range.
     #[inline]
     fn div(self, v: UnipolarFloat) -> Self {
+        // A full duty cycle divides by exactly one, which changes nothing but
+        // costs a divide on the caller's chain. Wrapped all the same, so
+        // `Phase::ONE` still comes out as zero.
+        if v.0 == 1.0 {
+            return Self::new(self.0);
+        }
         Self::new(self.0 / v.val())
     }
 }
@@ -431,12 +437,10 @@ impl<T: Into<f64> + Copy> PartialEq<T> for Phase {
 mod tests {
     use super::*;
 
-    /// A phase is the distance above the whole number at or below the value
-    /// it was made from: the Euclidean remainder by one, with every zero
-    /// positive.
-    #[test]
-    fn a_phase_is_the_euclidean_remainder_by_one_with_positive_zeros() {
-        // xorshift64*, so the probes are the same on every run.
+    /// Finite values across every range a phase is made from, and either
+    /// side of whole numbers and eighths, the same on every run.
+    fn probes() -> Vec<f64> {
+        // xorshift64*.
         let mut state = 0x9E37_79B9_7F4A_7C15u64;
         let mut next = move || {
             state ^= state >> 12;
@@ -463,8 +467,15 @@ mod tests {
                 above = above.next_up();
             }
         }
+        probes
+    }
 
-        for v in probes {
+    /// A phase is the distance above the whole number at or below the value
+    /// it was made from: the Euclidean remainder by one, with every zero
+    /// positive.
+    #[test]
+    fn a_phase_is_the_euclidean_remainder_by_one_with_positive_zeros() {
+        for v in probes() {
             let wrapped = Phase::new(v).val();
             let remainder = v.rem_euclid(1.0);
             if remainder == 0.0 {
@@ -484,5 +495,24 @@ mod tests {
         // Too little below zero for its distance below one to be told apart
         // from one.
         assert_eq!(Phase::new(-1e-20).val(), 1.0);
+    }
+
+    /// Dividing a phase wraps the quotient, whatever the divisor.
+    #[test]
+    fn dividing_a_phase_wraps_the_quotient() {
+        let divisors = [0.5, 0.7, 1.0 - f64::EPSILON, 1.0].map(UnipolarFloat::new);
+        for v in probes() {
+            let p = Phase::new(v);
+            for d in divisors {
+                let quotient = (p / d).val();
+                let wrapped = Phase::new(p.val() / d.val()).val();
+                assert_eq!(
+                    quotient.to_bits(),
+                    wrapped.to_bits(),
+                    "{p:?} / {d:?} gave {quotient:e} rather than {wrapped:e}"
+                );
+            }
+        }
+        assert_eq!((Phase::ONE / UnipolarFloat::ONE).val(), 0.0);
     }
 }
